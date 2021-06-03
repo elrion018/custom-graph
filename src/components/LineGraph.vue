@@ -69,7 +69,7 @@ export default {
       tpCache: [],
 
       baseStartIndex: null,
-      baseEndIdnex: null,
+      baseEndIndex: null,
       targetStartIndex: null,
       targetEndIndex: null,
       startIndex: null,
@@ -95,7 +95,7 @@ export default {
     },
 
     unitWidth() {
-      return this.graphBoxWidth / (this.endIndex - this.startIndex);
+      return this.graphBoxWidth / (this.endIndex - this.startIndex - 1);
     },
 
     heightRatio() {
@@ -171,15 +171,19 @@ export default {
       event.preventDefault();
       console.log('start');
 
+      const touches = event.targetTouches;
+      this.tpCache = [];
+
+      touches.forEach(touch => {
+        this.tpCache.push(touch);
+      });
+
       if (event.targetTouches.length === 1) {
         //
+        // const pointIndex1 = Math.round(
+        //   (touches[0].clientX - this.graphBoxMargin) / this.unitWidth
+        // );
       } else if (event.targetTouches.length === 2) {
-        const touches = event.targetTouches;
-
-        touches.forEach(touch => {
-          this.tpCache.push(touch);
-        });
-
         const pointIndex1 = Math.round(
           (touches[0].clientX - this.graphBoxMargin) / this.unitWidth
         );
@@ -207,7 +211,7 @@ export default {
         console.log('touch end');
 
         this.baseStartIndex = this.startIndex;
-        this.baseEndIdnex = this.endIndex;
+        this.baseEndIndex = this.endIndex;
         this.targetStartIndex = null;
         this.targetEndIndex = null;
         this.tpCache = [];
@@ -255,11 +259,8 @@ export default {
             this.tpCache[rightBasePoint].clientX -
             event.targetTouches[rightBasePoint].clientX;
 
-          const totalDiff = Math.round(
-            Math.abs(leftDiff) + Math.abs(rightDiff)
-          );
-
-          const diffIndex = parseInt(totalDiff / 20);
+          const totalDiff = Math.abs(leftDiff) + Math.abs(rightDiff);
+          const diffIndex = Math.round(totalDiff / 20);
 
           if (
             leftDiff > 0 &&
@@ -275,10 +276,10 @@ export default {
             }
 
             if (this.endIndex > this.targetEndIndex) {
-              if (this.baseEndIdnex - diffIndex < this.targetEndIndex) {
+              if (this.baseEndIndex - diffIndex < this.targetEndIndex) {
                 this.endIndex = this.targetEndIndex;
               } else {
-                this.endIndex = this.baseEndIdnex - diffIndex;
+                this.endIndex = this.baseEndIndex - diffIndex;
               }
             }
           } else if (leftDiff < 0 && rightDiff > 0) {
@@ -291,13 +292,39 @@ export default {
             }
 
             if (this.endIndex < this.data.length - 1) {
-              if (this.baseEndIdnex + diffIndex > this.data.length - 1) {
+              if (this.baseEndIndex + diffIndex > this.data.length - 1) {
                 this.endIndex = this.data.length - 1;
               } else {
-                this.endIndex = this.baseEndIdnex + diffIndex;
+                this.endIndex = this.baseEndIndex + diffIndex;
               }
             }
           }
+        }
+      } else if (
+        event.targetTouches.length === 1 &&
+        event.changedTouches.length === 1
+      ) {
+        const diff = this.tpCache[0].clientX - event.targetTouches[0].clientX;
+        const diffIndex = Math.round(Math.abs(diff) / 20);
+
+        if (diff > 0 && this.baseEndIndex + diffIndex <= this.data.length - 1) {
+          //
+
+          this.startIndex = this.baseStartIndex + diffIndex;
+          this.endIndex =
+            this.baseEndIndex + diffIndex > this.data.length - 1
+              ? this.data.length - 1
+              : this.baseEndIndex + diffIndex;
+        }
+
+        if (diff < 0 && this.baseStartIndex - diffIndex >= 0) {
+          //
+
+          this.startIndex =
+            this.baseStartIndex - diffIndex < 0
+              ? 0
+              : this.baseStartIndex - diffIndex;
+          this.endIndex = this.baseEndIndex - diffIndex;
         }
       }
     },
@@ -308,7 +335,7 @@ export default {
     this.startIndex = 0;
     this.endIndex = this.data.length - 1;
     this.baseStartIndex = 0;
-    this.baseEndIdnex = this.data.length - 1;
+    this.baseEndIndex = this.data.length - 1;
 
     this.drawGraphBox();
     this.drawGraph();
