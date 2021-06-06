@@ -1,16 +1,30 @@
 <template>
-  <canvas width="360" height="300"></canvas>
+  <div>
+    <canvas ref="graph" width="360" height="300"></canvas>
+    <x-axis
+      :timeData="timeData"
+      :unitWidth="unitWidth"
+      :startIndex="startIndex"
+    ></x-axis>
+  </div>
 </template>
 
 <script>
+import XAxis from './XAxis.vue';
+
 export default {
   name: 'LineGraph',
+  components: {
+    XAxis,
+  },
 
   data() {
     return {
-      canvasWidth: 360,
+      ctx: null,
+
+      canvasWidth: 340,
       canvasHeight: 300,
-      graphBoxMargin: 0,
+      graphBoxMargin: 10,
       graphBoxColor: 'green',
       graphColor: 'green',
       data: [
@@ -23,57 +37,58 @@ export default {
         ['7일', 450],
         ['8일', 250],
         ['9일', 430],
-        ['10일', 320],
-        ['1일', 320],
-        ['2일', 350],
-        ['3일', 230],
-        ['4일', 320],
-        ['5일', 220],
-        ['6일', 430],
-        ['7일', 450],
-        ['8일', 250],
-        ['9일', 430],
-        ['10일', 320],
-        ['1일', 320],
-        ['2일', 350],
-        ['3일', 230],
-        ['4일', 320],
-        ['5일', 220],
-        ['6일', 430],
-        ['7일', 450],
-        ['8일', 250],
-        ['9일', 430],
-        ['10일', 320],
-        ['1일', 320],
-        ['2일', 350],
-        ['3일', 230],
-        ['4일', 320],
-        ['5일', 220],
-        ['6일', 430],
-        ['7일', 450],
-        ['8일', 250],
-        ['9일', 430],
-        ['10일', 320],
-        ['1일', 320],
-        ['2일', 350],
-        ['3일', 230],
-        ['4일', 320],
-        ['5일', 220],
-        ['6일', 430],
-        ['7일', 450],
-        ['8일', 250],
-        ['9일', 430],
-        ['10일', 320],
+        ['10일', 420],
+        ['11일', 520],
+        ['12일', 650],
+        ['13일', 730],
+        ['14일', 820],
+        ['15일', 920],
+        ['16일', 1030],
+        ['17일', 1150],
+        ['18일', 1250],
+        ['19일', 1330],
+        ['20일', 1420],
+        ['21일', 1520],
+        ['22일', 1650],
+        ['23일', 1730],
+        ['24일', 1820],
+        ['25일', 1920],
+        ['26일', 2030],
+        ['27일', 2150],
+        ['28일', 2250],
+        ['29일', 2330],
+        ['30일', 2420],
+        ['31일', 2520],
+        ['32일', 2650],
+        ['33일', 2730],
+        ['34일', 2820],
+        ['35일', 2920],
+        ['36일', 3030],
+        ['37일', 3150],
+        ['38일', 3250],
+        ['39일', 3330],
+        ['40일', 3420],
+        ['41일', 3520],
+        ['42일', 3650],
+        ['43일', 3730],
+        ['44일', 3820],
+        ['45일', 3920],
+        ['46일', 4030],
+        ['47일', 450],
+        ['48일', 4250],
+        ['49일', 4430],
+        ['50일', 5320],
       ],
 
       tpCache: [],
-
       baseStartIndex: null,
       baseEndIndex: null,
       targetStartIndex: null,
       targetEndIndex: null,
-      startIndex: null,
+      startIndex: 0,
       endIndex: null,
+
+      timeData: [],
     };
   },
 
@@ -109,8 +124,8 @@ export default {
       this.ctx.strokeRect(
         this.graphBoxMargin,
         this.graphBoxMargin,
-        this.canvasWidth,
-        this.canvasHeight
+        this.graphBoxWidth,
+        this.graphBoxHeight
       );
     },
 
@@ -124,9 +139,19 @@ export default {
 
       let unitHeight = null;
 
-      for (let i = this.startIndex; i < this.endIndex; i++) {
-        // const [time, value] = element;
-        const value = this.data[i][1];
+      let interval = Math.floor((this.endIndex - this.startIndex) / 10);
+
+      if (interval === 1) {
+        interval = 2;
+      } else if (interval === 0) {
+        interval = 1;
+      }
+
+      console.log(this.endIndex - this.startIndex);
+      console.log(interval);
+
+      for (let i = this.startIndex; i < this.endIndex + 1; i++) {
+        const [time, value] = this.data[i];
         unitHeight =
           this.graphBoxMargin +
           this.graphBoxHeight -
@@ -136,6 +161,10 @@ export default {
           this.graphBoxMargin + this.unitWidth * (i - this.startIndex),
           unitHeight
         );
+
+        if (i % interval === 0) {
+          this.timeData.push([time, i]);
+        }
       }
 
       this.ctx.lineTo(
@@ -150,7 +179,7 @@ export default {
       let ceilValue = Number.MIN_VALUE;
       let floorValue = Number.MAX_VALUE;
 
-      for (let i = this.startIndex; i < this.endIndex; i++) {
+      for (let i = this.startIndex; i < this.endIndex + 1; i++) {
         let value = this.data[i][1];
         ceilValue = Math.max(ceilValue, value);
         floorValue = Math.min(floorValue, value);
@@ -178,12 +207,16 @@ export default {
         this.tpCache.push(touch);
       });
 
+<<<<<<< HEAD
+      if (event.targetTouches.length === 2) {
+=======
       if (event.targetTouches.length === 1) {
         //
         // const pointIndex1 = Math.round(
         //   (touches[0].clientX - this.graphBoxMargin) / this.unitWidth
         // );
       } else if (event.targetTouches.length === 2) {
+>>>>>>> ded532a9efda05cba6274c55bf8efcfc0d0110d4
         const pointIndex1 = Math.round(
           (touches[0].clientX - this.graphBoxMargin) / this.unitWidth
         );
@@ -308,8 +341,11 @@ export default {
         const diffIndex = Math.round(Math.abs(diff) / 20);
 
         if (diff > 0 && this.baseEndIndex + diffIndex <= this.data.length - 1) {
+<<<<<<< HEAD
+=======
           //
 
+>>>>>>> ded532a9efda05cba6274c55bf8efcfc0d0110d4
           this.startIndex = this.baseStartIndex + diffIndex;
           this.endIndex =
             this.baseEndIndex + diffIndex > this.data.length - 1
@@ -318,8 +354,11 @@ export default {
         }
 
         if (diff < 0 && this.baseStartIndex - diffIndex >= 0) {
+<<<<<<< HEAD
+=======
           //
 
+>>>>>>> ded532a9efda05cba6274c55bf8efcfc0d0110d4
           this.startIndex =
             this.baseStartIndex - diffIndex < 0
               ? 0
@@ -331,7 +370,7 @@ export default {
   },
 
   mounted() {
-    this.ctx = this.$el.getContext('2d');
+    this.ctx = this.$refs.graph.getContext('2d');
     this.startIndex = 0;
     this.endIndex = this.data.length - 1;
     this.baseStartIndex = 0;
@@ -339,20 +378,22 @@ export default {
 
     this.drawGraphBox();
     this.drawGraph();
-    this.$el.ontouchstart = this.touchStartHandler;
-    this.$el.ontouchmove = this.touchMoveHandler;
-    this.$el.ontouchend = this.touchEndhandler;
+
+    this.$refs.graph.ontouchstart = this.touchStartHandler;
+    this.$refs.graph.ontouchmove = this.touchMoveHandler;
+    this.$refs.graph.ontouchend = this.touchEndhandler;
   },
 
   watch: {
-    startIndex: function() {
+    startIndex() {
+      this.timeData = [];
       this.ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
       this.drawGraphBox();
       this.drawGraph();
-      this.$el.ontouchstart = this.touchStartHandler;
-      this.$el.ontouchmove = this.touchMoveHandler;
-      this.$el.ontocuhcancel = this.touchEndhandler;
-      this.$el.ontouchend = this.touchEndhandler;
+      this.$refs.graph.ontouchstart = this.touchStartHandler;
+      this.$refs.graph.ontouchmove = this.touchMoveHandler;
+      this.$refs.graph.ontocuhcancel = this.touchEndhandler;
+      this.$refs.graph.ontouchend = this.touchEndhandler;
     },
   },
 };
